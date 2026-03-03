@@ -56,9 +56,11 @@ export function EditModeToolbar({ hasChanges, saving, currentPalette, onPaletteC
                     onClick={() => { onPaletteChange(id); setPaletteOpen(false); }}
                     className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors hover:bg-foreground/5 ${id === currentPalette ? "text-flame-accent" : "text-foreground/70"}`}
                   >
-                    <span className="flex gap-0.5">
-                      <span className="inline-block h-3 w-3 rounded-sm" style={{ background: p.light }} />
-                      <span className="inline-block h-3 w-3 rounded-sm" style={{ background: p.dark }} />
+                    <span className="grid grid-cols-2 gap-px">
+                      <span className="inline-block h-2.5 w-2.5 rounded-tl-sm" style={{ background: p.lightBg }} />
+                      <span className="inline-block h-2.5 w-2.5 rounded-tr-sm" style={{ background: p.light }} />
+                      <span className="inline-block h-2.5 w-2.5 rounded-bl-sm" style={{ background: p.darkBg }} />
+                      <span className="inline-block h-2.5 w-2.5 rounded-br-sm" style={{ background: p.dark }} />
                     </span>
                     {p.label}
                   </button>

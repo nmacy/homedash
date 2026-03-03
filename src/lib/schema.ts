@@ -9,6 +9,12 @@ export const PALETTE_IDS = [
   "emerald",
   "amber",
   "rose",
+  "tokyo-night",
+  "gruvbox",
+  "kanagawa",
+  "moonlight",
+  "synthwave",
+  "oxocarbon",
 ] as const;
 
 export type PaletteId = (typeof PALETTE_IDS)[number];

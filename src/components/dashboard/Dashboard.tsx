@@ -18,7 +18,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useTheme } from "next-themes";
-import { PALETTES } from "@/lib/palettes";
+import { PALETTES, getBgSurfaces } from "@/lib/palettes";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CategorySection } from "./CategorySection";
 import { EditModeToolbar } from "./EditModeToolbar";
@@ -96,9 +96,22 @@ export function Dashboard({ initialConfig }: DashboardProps) {
   }, []);
 
   useEffect(() => {
+    if (!resolvedTheme) return;
     const palette = PALETTES[config.palette];
-    const color = resolvedTheme === "dark" ? palette.dark : palette.light;
-    document.documentElement.style.setProperty("--flame-accent", color);
+    const mode = resolvedTheme === "dark" ? "dark" : "light";
+    const accent = mode === "dark" ? palette.dark : palette.light;
+    const bg = mode === "dark" ? palette.darkBg : palette.lightBg;
+    const surfaces = getBgSurfaces(bg, mode);
+
+    const el = document.documentElement;
+    el.style.setProperty("--flame-accent", accent);
+    el.style.setProperty("--background", surfaces.background);
+    el.style.setProperty("--card", surfaces.card);
+    el.style.setProperty("--popover", surfaces.popover);
+    el.style.setProperty("--secondary", surfaces.secondary);
+    el.style.setProperty("--muted", surfaces.muted);
+    el.style.setProperty("--accent", surfaces.accent);
+    el.style.setProperty("--primary-foreground", surfaces.primaryForeground);
   }, [config.palette, resolvedTheme]);
 
   const categorySensors = useSensors(
