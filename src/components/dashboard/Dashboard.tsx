@@ -17,6 +17,8 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useTheme } from "next-themes";
+import { PALETTES, getBgSurfaces } from "@/lib/palettes";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CategorySection } from "./CategorySection";
 import { EditModeToolbar } from "./EditModeToolbar";
@@ -63,6 +65,7 @@ export function Dashboard({ initialConfig }: DashboardProps) {
     hasChanges,
     saveConfig,
     discardChanges,
+    updatePalette,
     addCategory,
     updateCategory,
     deleteCategory,
@@ -73,6 +76,8 @@ export function Dashboard({ initialConfig }: DashboardProps) {
     moveService,
     reloadConfig,
   } = useConfig(initialConfig);
+
+  const { resolvedTheme } = useTheme();
 
   const { editing, toggleEditMode, exitEditMode } = useEditMode();
   const [dialog, setDialog] = useState<DialogState | null>(null);
@@ -89,6 +94,25 @@ export function Dashboard({ initialConfig }: DashboardProps) {
     }, 60_000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!resolvedTheme) return;
+    const palette = PALETTES[config.palette];
+    const mode = resolvedTheme === "dark" ? "dark" : "light";
+    const accent = mode === "dark" ? palette.dark : palette.light;
+    const bg = mode === "dark" ? palette.darkBg : palette.lightBg;
+    const surfaces = getBgSurfaces(bg, mode);
+
+    const el = document.documentElement;
+    el.style.setProperty("--flame-accent", accent);
+    el.style.setProperty("--background", surfaces.background);
+    el.style.setProperty("--card", surfaces.card);
+    el.style.setProperty("--popover", surfaces.popover);
+    el.style.setProperty("--secondary", surfaces.secondary);
+    el.style.setProperty("--muted", surfaces.muted);
+    el.style.setProperty("--accent", surfaces.accent);
+    el.style.setProperty("--primary-foreground", surfaces.primaryForeground);
+  }, [config.palette, resolvedTheme]);
 
   const categorySensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -153,6 +177,8 @@ export function Dashboard({ initialConfig }: DashboardProps) {
         <EditModeToolbar
           hasChanges={hasChanges}
           saving={saving}
+          currentPalette={config.palette}
+          onPaletteChange={updatePalette}
           onSave={handleSave}
           onDiscard={handleDiscard}
           onExit={handleDiscard}
