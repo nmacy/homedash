@@ -18,7 +18,44 @@ const DEFAULT_CONFIG: Config = {
   title: "My Homelab",
   theme: "system",
   palette: "tron",
-  categories: [],
+  categories: [
+    {
+      name: "Infrastructure",
+      icon: "server",
+      services: [
+        { name: "Proxmox", url: "https://proxmox.local:8006", icon: "dash:proxmox", description: "Hypervisor" },
+        { name: "Portainer", url: "https://portainer.local:9443", icon: "dash:portainer", description: "Container management" },
+        { name: "Pi-hole", url: "http://pihole.local", icon: "dash:pi-hole", description: "DNS ad blocker" },
+        { name: "Nginx Proxy Manager", url: "http://npm.local:81", icon: "dash:nginx-proxy-manager", description: "Reverse proxy" },
+      ],
+    },
+    {
+      name: "Media",
+      icon: "film",
+      services: [
+        { name: "Plex", url: "https://plex.local:32400", icon: "dash:plex", description: "Media server" },
+        { name: "Sonarr", url: "https://sonarr.local:8989", icon: "dash:sonarr", description: "TV series management" },
+        { name: "Radarr", url: "https://radarr.local:7878", icon: "dash:radarr", description: "Movie management" },
+        { name: "Prowlarr", url: "https://prowlarr.local:9696", icon: "dash:prowlarr", description: "Indexer manager" },
+      ],
+    },
+    {
+      name: "Monitoring",
+      icon: "activity",
+      services: [
+        { name: "Uptime Kuma", url: "https://uptime.local:3001", icon: "dash:uptime-kuma", description: "Uptime monitoring" },
+        { name: "Grafana", url: "https://grafana.local:3000", icon: "dash:grafana", description: "Dashboards & analytics" },
+      ],
+    },
+    {
+      name: "Storage",
+      icon: "hard-drive",
+      services: [
+        { name: "Nextcloud", url: "https://nextcloud.local", icon: "dash:nextcloud", description: "File sync & sharing" },
+        { name: "Syncthing", url: "https://syncthing.local:8384", icon: "dash:syncthing", description: "File synchronization" },
+      ],
+    },
+  ],
 };
 
 function ensureConfigExists(): void {
