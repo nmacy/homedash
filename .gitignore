@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# config (contains internal network topology)
+config/config.yaml
+config/backups/

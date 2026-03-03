@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json(config);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to read config" },
+      { error: "Failed to read config" },
       { status: 500 }
     );
   }
@@ -22,10 +22,10 @@ export async function PUT(request: Request) {
     return NextResponse.json(config);
   } catch (error) {
     if (error instanceof Error && error.name === "ZodError") {
-      return NextResponse.json({ error: "Invalid config", details: error }, { status: 400 });
+      return NextResponse.json({ error: "Invalid config" }, { status: 400 });
     }
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to write config" },
+      { error: "Failed to write config" },
       { status: 500 }
     );
   }

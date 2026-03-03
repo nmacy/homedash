@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type RemoteIconSet = "si" | "dash";
 
 export interface RemoteIcon {
@@ -8,6 +10,22 @@ export interface RemoteIcon {
 }
 
 // --- Index caching ---
+
+const FETCH_TIMEOUT_MS = 10_000;
+
+const simpleIconEntrySchema = z.object({
+  title: z.string(),
+  slug: z.string(),
+  hex: z.string(),
+});
+
+const simpleIconsResponseSchema = z.object({
+  icons: z.array(simpleIconEntrySchema),
+});
+
+const dashboardIconsResponseSchema = z.object({
+  files: z.array(z.object({ name: z.string() })),
+});
 
 interface SimpleIconEntry {
   title: string;
@@ -26,14 +44,16 @@ async function fetchSimpleIconsIndex(): Promise<SimpleIconEntry[]> {
   if (siPromise) return siPromise;
 
   siPromise = fetch(
-    "https://cdn.jsdelivr.net/npm/simple-icons/_data/simple-icons.json"
+    "https://cdn.jsdelivr.net/npm/simple-icons/_data/simple-icons.json",
+    { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }
   )
     .then((r) => {
       if (!r.ok) throw new Error(`Simple Icons index fetch failed: ${r.status}`);
       return r.json();
     })
-    .then((data: { icons: SimpleIconEntry[] }) => {
-      siIndex = data.icons;
+    .then((data: unknown) => {
+      const parsed = simpleIconsResponseSchema.parse(data);
+      siIndex = parsed.icons;
       return siIndex;
     })
     .catch((err) => {
@@ -49,14 +69,16 @@ async function fetchDashboardIconsIndex(): Promise<string[]> {
   if (dashPromise) return dashPromise;
 
   dashPromise = fetch(
-    "https://data.jsdelivr.com/v1/packages/gh/walkxcode/dashboard-icons@main?structure=flat"
+    "https://data.jsdelivr.com/v1/packages/gh/walkxcode/dashboard-icons@main?structure=flat",
+    { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }
   )
     .then((r) => {
       if (!r.ok) throw new Error(`Dashboard Icons index fetch failed: ${r.status}`);
       return r.json();
     })
-    .then((data: { files: { name: string }[] }) => {
-      dashIndex = data.files
+    .then((data: unknown) => {
+      const parsed = dashboardIconsResponseSchema.parse(data);
+      dashIndex = parsed.files
         .map((f) => f.name)
         .filter((n) => n.startsWith("/svg/") && n.endsWith(".svg"))
         .map((n) => n.slice(5, -4)); // "/svg/jellyfin.svg" -> "jellyfin"
@@ -119,13 +141,17 @@ export async function searchRemoteIcons(
 
 // --- URL resolution (pure, no fetch) ---
 
+const SAFE_SLUG_RE = /^[a-z0-9][a-z0-9._-]*$/;
+
 export function resolveRemoteIconUrl(prefixedName: string): string | null {
   if (prefixedName.startsWith("si:")) {
     const slug = prefixedName.slice(3);
+    if (!SAFE_SLUG_RE.test(slug)) return null;
     return `https://cdn.simpleicons.org/${slug}`;
   }
   if (prefixedName.startsWith("dash:")) {
     const name = prefixedName.slice(5);
+    if (!SAFE_SLUG_RE.test(name)) return null;
     return `https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/${name}.svg`;
   }
   return null;

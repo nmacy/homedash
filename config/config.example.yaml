@@ -1,0 +1,21 @@
+title: My Homelab
+theme: system
+categories:
+  - name: Infrastructure
+    icon: server
+    services:
+      - name: Proxmox
+        url: https://proxmox.local:8006
+        icon: mdi:server
+      - name: Portainer
+        url: https://portainer.local:9000
+        icon: si:portainer
+  - name: Media
+    icon: play
+    services:
+      - name: Plex
+        url: https://plex.local:32400
+        icon: si:plex
+      - name: Jellyfin
+        url: https://jellyfin.local:8096
+        icon: dash:jellyfin

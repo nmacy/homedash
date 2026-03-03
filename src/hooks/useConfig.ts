@@ -28,7 +28,7 @@ export function useConfig(initialConfig: Config) {
       setSaving(true);
       const res = await fetch("/api/config", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify(config),
       });
       if (!res.ok) throw new Error("Failed to save config");

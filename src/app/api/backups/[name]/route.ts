@@ -9,10 +9,11 @@ export async function GET(_request: Request, { params }: Params) {
   try {
     const { name } = await params;
     const content = readBackupFile(name);
+    const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
     return new NextResponse(content, {
       headers: {
         "Content-Type": "application/x-yaml",
-        "Content-Disposition": `attachment; filename="${name}"`,
+        "Content-Disposition": `attachment; filename="${safeName}"`,
       },
     });
   } catch (e) {

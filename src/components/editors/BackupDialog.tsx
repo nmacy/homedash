@@ -79,7 +79,7 @@ export function BackupDialog({ open, onOpenChange, onRestore }: BackupDialogProp
     try {
       const res = await fetch("/api/backups", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ label: label.trim() || undefined }),
       });
       if (!res.ok) throw new Error("Failed to create backup");
@@ -95,7 +95,10 @@ export function BackupDialog({ open, onOpenChange, onRestore }: BackupDialogProp
 
   const handleRestore = async (name: string) => {
     try {
-      const res = await fetch(`/api/backups/${encodeURIComponent(name)}`, { method: "POST" });
+      const res = await fetch(`/api/backups/${encodeURIComponent(name)}`, {
+        method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
       if (!res.ok) throw new Error("Failed to restore backup");
       toast.success("Backup restored");
       onRestore();
@@ -110,7 +113,11 @@ export function BackupDialog({ open, onOpenChange, onRestore }: BackupDialogProp
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/backups", { method: "PUT", body: formData });
+      const res = await fetch("/api/backups", {
+        method: "PUT",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        body: formData,
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Failed to upload");
@@ -127,7 +134,10 @@ export function BackupDialog({ open, onOpenChange, onRestore }: BackupDialogProp
 
   const handleDelete = async (name: string) => {
     try {
-      const res = await fetch(`/api/backups/${encodeURIComponent(name)}`, { method: "DELETE" });
+      const res = await fetch(`/api/backups/${encodeURIComponent(name)}`, {
+        method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
       if (!res.ok) throw new Error("Failed to delete backup");
       toast.success("Backup deleted");
       await fetchBackups();
