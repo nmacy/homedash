@@ -17,6 +17,7 @@ export interface BackupInfo {
 const DEFAULT_CONFIG: Config = {
   title: "My Homelab",
   theme: "system",
+  palette: "tron",
   categories: [],
 };
 

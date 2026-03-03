@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { Config, Category, Service } from "@/lib/schema";
+import type { Config, Category, Service, PaletteId } from "@/lib/schema";
 
 export function useConfig(initialConfig: Config) {
   const [config, setConfig] = useState<Config>(initialConfig);
@@ -52,6 +52,10 @@ export function useConfig(initialConfig: Config) {
 
   const updateTitle = useCallback((title: string) => {
     setConfig((prev) => ({ ...prev, title }));
+  }, []);
+
+  const updatePalette = useCallback((palette: PaletteId) => {
+    setConfig((prev) => ({ ...prev, palette }));
   }, []);
 
   const addCategory = useCallback((category: Category) => {
@@ -157,6 +161,7 @@ export function useConfig(initialConfig: Config) {
     discardChanges,
     reloadConfig,
     updateTitle,
+    updatePalette,
     addCategory,
     updateCategory,
     deleteCategory,

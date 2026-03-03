@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export const PALETTE_IDS = [
+  "tron",
+  "nord",
+  "catppuccin",
+  "dracula",
+  "solarized",
+  "emerald",
+  "amber",
+  "rose",
+] as const;
+
+export type PaletteId = (typeof PALETTE_IDS)[number];
+
 const safeUrl = z
   .string()
   .url("Must be a valid URL")
@@ -41,6 +54,7 @@ export const categorySchema = z.object({
 export const configSchema = z.object({
   title: z.string().max(200, "Title too long").default("My Homelab"),
   theme: z.enum(["dark", "light", "system"]).default("system"),
+  palette: z.enum(PALETTE_IDS).default("tron"),
   categories: z.array(categorySchema).max(50, "Too many categories").default([]),
 });
 
