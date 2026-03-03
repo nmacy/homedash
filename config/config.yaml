@@ -1,0 +1,44 @@
+title: My Homelab
+theme: system
+categories:
+  - name: Media
+    icon: film
+    services:
+      - name: Plex
+        url: http://plex.infosec-labs.net:32400
+        icon: dash:plex
+        description: Media server
+      - name: Sonarr
+        url: https://sonarr.infosec-labs.net
+        icon: dash:sonarr
+        description: TV series management
+      - name: Radarr
+        url: https://radarr.infosec-labs.net
+        icon: dash:radarr
+        description: Movie Management
+      - name: Prowlarr
+        url: https://prowlarr.infosec-labs.net
+        icon: dash:prowlarr
+        description: Indexer Manager
+  - name: Infrastructure
+    icon: server
+    services:
+      - name: Proxmox
+        url: https://pve01.infosec-labs.net:8006
+        icon: dash:proxmox
+        description: Hypervisor
+      - name: Dockge
+        url: https://docker.infosec-labs.net
+        icon: dash:docker
+        description: Docker management
+      - name: Adguard
+        url: https://adguard1.infosec-labs.net
+        icon: dash:adguard-home
+        description: DNS ad blocker
+  - name: Monitoring
+    icon: activity
+    services:
+      - name: Uptime Kuma
+        url: https://uptime.infosec-labs.net
+        icon: dash:uptime-kuma
+        description: Uptime monitoring
