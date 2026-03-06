@@ -52,7 +52,7 @@ export function IconPicker({ value, onSelect }: IconPickerProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchRemote = useCallback(
-    (query: string, set: "si" | "dash") => {
+    (query: string, set?: "si" | "dash") => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
 
       if (query.length < 2) {
@@ -64,9 +64,10 @@ export function IconPicker({ value, onSelect }: IconPickerProps) {
       setRemoteLoading(true);
       debounceRef.current = setTimeout(async () => {
         try {
-          const res = await fetch(
-            `/api/icons?q=${encodeURIComponent(query)}&set=${set}`
-          );
+          const url = set
+            ? `/api/icons?q=${encodeURIComponent(query)}&set=${set}`
+            : `/api/icons?q=${encodeURIComponent(query)}`;
+          const res = await fetch(url);
           if (res.ok) {
             const data: RemoteIcon[] = await res.json();
             setRemoteResults(data);
@@ -83,22 +84,22 @@ export function IconPicker({ value, onSelect }: IconPickerProps) {
     []
   );
 
-  // Trigger remote search when search text or remote tab changes
+  const isSearching = search.length > 0;
+
+  // Fetch remote icons: all sets when searching, single set when browsing a remote tab
   useEffect(() => {
-    if (isRemoteTab(tab)) {
+    if (isSearching) {
+      fetchRemote(search);
+    } else if (isRemoteTab(tab)) {
       fetchRemote(search, tab);
+    } else {
+      setRemoteResults([]);
+      setRemoteLoading(false);
     }
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, tab, fetchRemote]);
-
-  // Clear remote results when switching to a local tab
-  useEffect(() => {
-    if (!isRemoteTab(tab)) {
-      setRemoteResults([]);
-    }
-  }, [tab]);
+  }, [search, tab, fetchRemote, isSearching]);
 
   const filteredLucide = useMemo(() => {
     const q = search.toLowerCase();
@@ -116,121 +117,176 @@ export function IconPicker({ value, onSelect }: IconPickerProps) {
     return list.slice(0, 80);
   }, [search]);
 
+  const remoteBySet = useMemo(() => {
+    const si = remoteResults.filter((i) => i.set === "si");
+    const dash = remoteResults.filter((i) => i.set === "dash");
+    return { si, dash };
+  }, [remoteResults]);
+
+  const totalSearchResults =
+    filteredLucide.length + filteredMdi.length + remoteResults.length;
+
+  const renderLucideIcons = (entries: typeof filteredLucide) =>
+    entries.map(([name, Icon]) => {
+      const dashName = toDashCase(name);
+      return (
+        <button
+          key={name}
+          type="button"
+          className={`flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-black/20 ${
+            value === dashName ? "bg-flame-accent text-background" : "text-foreground/70"
+          }`}
+          onClick={() => onSelect(dashName)}
+          title={dashName}
+        >
+          <Icon className="h-4 w-4" />
+        </button>
+      );
+    });
+
+  const renderMdiIcons = (entries: typeof filteredMdi) =>
+    entries.map((entry) => {
+      const fullName = `mdi:${entry.name}`;
+      return (
+        <button
+          key={entry.key}
+          type="button"
+          className={`flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-black/20 ${
+            value === fullName ? "bg-flame-accent text-background" : "text-foreground/70"
+          }`}
+          onClick={() => onSelect(fullName)}
+          title={entry.name}
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+            <path d={entry.path} />
+          </svg>
+        </button>
+      );
+    });
+
+  const renderRemoteIcons = (icons: RemoteIcon[]) =>
+    icons.map((icon) => {
+      const fullName = `${icon.set}:${icon.slug}`;
+      return (
+        <button
+          key={fullName}
+          type="button"
+          className={`flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-black/20 ${
+            value === fullName
+              ? "bg-flame-accent text-background"
+              : "text-foreground/70"
+          }`}
+          onClick={() => onSelect(fullName)}
+          title={icon.name}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={icon.url} alt="" className="h-4 w-4" />
+        </button>
+      );
+    });
+
+  const sectionLabel = (text: string) => (
+    <p className="col-span-8 pt-2 pb-1 text-[10px] uppercase tracking-wider text-foreground/40">
+      {text}
+    </p>
+  );
+
   return (
     <div className="space-y-2">
-      <div className="flex gap-1">
-        {(["lucide", "mdi", "si", "dash"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={TAB_BUTTON_CLASS(tab === t)}
-          >
-            {t === "lucide"
-              ? "Lucide"
-              : t === "mdi"
-                ? "MDI"
-                : t === "si"
-                  ? "Simple Icons"
-                  : "Dashboard Icons"}
-          </button>
-        ))}
-      </div>
+      {!isSearching && (
+        <div className="flex gap-1">
+          {(["lucide", "mdi", "si", "dash"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={TAB_BUTTON_CLASS(tab === t)}
+            >
+              {t === "lucide"
+                ? "Lucide"
+                : t === "mdi"
+                  ? "MDI"
+                  : t === "si"
+                    ? "Simple Icons"
+                    : "Dashboard Icons"}
+            </button>
+          ))}
+        </div>
+      )}
       <Input
-        placeholder={
-          isRemoteTab(tab) ? "Type to search..." : "Search icons..."
-        }
+        placeholder="Search all icons..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="border-foreground/20 bg-transparent"
       />
       <div className="grid max-h-48 grid-cols-8 gap-0.5 overflow-y-auto">
-        {tab === "lucide" &&
-          filteredLucide.map(([name, Icon]) => {
-            const dashName = toDashCase(name);
-            return (
-              <button
-                key={name}
-                type="button"
-                className={`flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-black/20 ${
-                  value === dashName ? "bg-flame-accent text-background" : "text-foreground/70"
-                }`}
-                onClick={() => onSelect(dashName)}
-                title={dashName}
-              >
-                <Icon className="h-4 w-4" />
-              </button>
-            );
-          })}
-        {tab === "mdi" &&
-          filteredMdi.map((entry) => {
-            const fullName = `mdi:${entry.name}`;
-            return (
-              <button
-                key={entry.key}
-                type="button"
-                className={`flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-black/20 ${
-                  value === fullName ? "bg-flame-accent text-background" : "text-foreground/70"
-                }`}
-                onClick={() => onSelect(fullName)}
-                title={entry.name}
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                  <path d={entry.path} />
-                </svg>
-              </button>
-            );
-          })}
-        {isRemoteTab(tab) && (
+        {isSearching ? (
           <>
+            {filteredLucide.length > 0 && (
+              <>
+                {sectionLabel("Lucide")}
+                {renderLucideIcons(filteredLucide)}
+              </>
+            )}
+            {filteredMdi.length > 0 && (
+              <>
+                {sectionLabel("MDI")}
+                {renderMdiIcons(filteredMdi)}
+              </>
+            )}
             {remoteLoading && (
               <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
                 Searching...
               </p>
             )}
-            {!remoteLoading && search.length < 2 && (
+            {!remoteLoading && remoteBySet.si.length > 0 && (
+              <>
+                {sectionLabel("Simple Icons")}
+                {renderRemoteIcons(remoteBySet.si)}
+              </>
+            )}
+            {!remoteLoading && remoteBySet.dash.length > 0 && (
+              <>
+                {sectionLabel("Dashboard Icons")}
+                {renderRemoteIcons(remoteBySet.dash)}
+              </>
+            )}
+            {!remoteLoading && totalSearchResults === 0 && (
               <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
-                Type to search...
+                No icons found
               </p>
             )}
-            {!remoteLoading &&
-              search.length >= 2 &&
-              remoteResults.length === 0 && (
-                <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
-                  No icons found
-                </p>
-              )}
-            {!remoteLoading &&
-              remoteResults.map((icon) => {
-                const fullName = `${icon.set}:${icon.slug}`;
-                return (
-                  <button
-                    key={fullName}
-                    type="button"
-                    className={`flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-black/20 ${
-                      value === fullName
-                        ? "bg-flame-accent text-background"
-                        : "text-foreground/70"
-                    }`}
-                    onClick={() => onSelect(fullName)}
-                    title={icon.name}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={icon.url} alt="" className="h-4 w-4" />
-                  </button>
-                );
-              })}
           </>
-        )}
-        {tab === "lucide" && filteredLucide.length === 0 && (
-          <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
-            No icons found
-          </p>
-        )}
-        {tab === "mdi" && filteredMdi.length === 0 && (
-          <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
-            No icons found
-          </p>
+        ) : (
+          <>
+            {tab === "lucide" && (
+              <>
+                {renderLucideIcons(filteredLucide)}
+                {filteredLucide.length === 0 && (
+                  <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
+                    No icons found
+                  </p>
+                )}
+              </>
+            )}
+            {tab === "mdi" && (
+              <>
+                {renderMdiIcons(filteredMdi)}
+                {filteredMdi.length === 0 && (
+                  <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
+                    No icons found
+                  </p>
+                )}
+              </>
+            )}
+            {isRemoteTab(tab) && (
+              <>
+                <p className="col-span-8 py-4 text-center text-xs uppercase tracking-wider text-foreground/40">
+                  Type to search...
+                </p>
+              </>
+            )}
+          </>
         )}
       </div>
     </div>

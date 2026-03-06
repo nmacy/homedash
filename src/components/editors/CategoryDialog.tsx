@@ -47,7 +47,7 @@ export function CategoryDialog({ open, onOpenChange, category, onSubmit }: Categ
   };
 
   const onFormSubmit = (data: CategoryFormData) => {
-    onSubmit(data);
+    onSubmit({ ...data, icon: data.icon || undefined });
     handleOpenChange(false);
   };
 

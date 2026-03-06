@@ -39,7 +39,7 @@ const iconSlug = z
   .string()
   .max(128, "Icon name too long")
   .regex(
-    /^(?:[a-z][a-z0-9-]*|mdi:[a-z0-9-]+|si:[a-z0-9._-]+|dash:[a-z0-9._-]+)$/,
+    /^(?:[a-z][a-z0-9-]*|mdi:[a-z0-9-]+|si:[a-z0-9._-]+|dash:[a-z0-9._-]+|fav:[A-Za-z0-9_-]+)$/,
     "Invalid icon format"
   )
   .optional();

@@ -29,8 +29,27 @@ function toMdiKey(name: string): string {
   );
 }
 
+export function encodeBase64Url(str: string): string {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export function decodeBase64Url(encoded: string): string {
+  const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  return atob(base64);
+}
+
 export function getIcon(name?: string): IconResult | null {
   if (!name) return null;
+
+  if (name.startsWith("fav:")) {
+    const encoded = name.slice(4);
+    try {
+      const origin = decodeBase64Url(encoded);
+      return { type: "remote", url: `/api/favicon?url=${encodeURIComponent(origin)}` };
+    } catch {
+      return null;
+    }
+  }
 
   if (name.startsWith("si:") || name.startsWith("dash:")) {
     const url = resolveRemoteIconUrl(name);

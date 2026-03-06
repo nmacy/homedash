@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { serviceSchema, type Service } from "@/lib/schema";
+import { encodeBase64Url } from "@/lib/icons";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,30 @@ export function ServiceDialog({ open, onOpenChange, service, onSubmit }: Service
   });
 
   const iconValue = watch("icon");
+  const urlValue = watch("url");
+
+  const isFavIcon = iconValue?.startsWith("fav:");
+
+  const canUseFavicon = (() => {
+    if (!urlValue) return false;
+    try {
+      const parsed = new URL(urlValue);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  })();
+
+  const handleUseFavicon = () => {
+    if (!urlValue) return;
+    try {
+      const origin = new URL(urlValue).origin;
+      const encoded = encodeBase64Url(origin);
+      setValue("icon", `fav:${encoded}`);
+    } catch {
+      // invalid URL, do nothing
+    }
+  };
 
   const handleOpenChange = (next: boolean) => {
     if (!next) reset(service ?? { name: "", url: "", icon: "", description: "" });
@@ -40,7 +65,7 @@ export function ServiceDialog({ open, onOpenChange, service, onSubmit }: Service
   };
 
   const onFormSubmit = (data: Service) => {
-    onSubmit(data);
+    onSubmit({ ...data, icon: data.icon || undefined, description: data.description || undefined });
     handleOpenChange(false);
   };
 
@@ -67,6 +92,29 @@ export function ServiceDialog({ open, onOpenChange, service, onSubmit }: Service
             <label htmlFor="description" className="text-xs uppercase tracking-wider text-foreground/60">Description</label>
             <Input id="description" {...register("description")} className="border-foreground/20 bg-transparent" />
           </div>
+          {canUseFavicon && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleUseFavicon}
+                className={`flex items-center gap-2 rounded border px-3 py-1.5 text-xs uppercase tracking-wider transition-colors ${
+                  isFavIcon
+                    ? "border-flame-accent bg-flame-accent/10 text-flame-accent"
+                    : "border-foreground/20 text-foreground/60 hover:bg-foreground/10"
+                }`}
+              >
+                {isFavIcon && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`/api/favicon?url=${encodeURIComponent(new URL(urlValue).origin)}`}
+                    alt=""
+                    className="h-4 w-4"
+                  />
+                )}
+                Use Favicon
+              </button>
+            </div>
+          )}
           <div className="space-y-1.5">
             <label className="text-xs uppercase tracking-wider text-foreground/60">Icon</label>
             <IconPicker
